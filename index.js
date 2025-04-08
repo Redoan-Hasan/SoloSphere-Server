@@ -82,7 +82,7 @@ async function run() {
 
     // getting single data for job details
     app.get("/job/:id", verifyToken, async (req, res) => {
-      const id = req.params.id;
+      const id = req?.params?.id;
       const query = { _id: new ObjectId(id) };
       const result = await jobsCollection.findOne(query);
       res.send(result);
@@ -188,27 +188,31 @@ async function run() {
       const filter = req?.query?.filter;
       // let query = {};
       // if(filter) query = {category: filter}
-      const count = await jobsCollection.countDocuments(filter ? {category: filter} : {});
+      const count = await jobsCollection.countDocuments(
+        filter ? { category: filter } : {}
+      );
       res.send({ count });
     });
 
+    // there is another way to filter here it is
+    // .find(filter ? { category: filter } : {})
 
-  // there is another way to filter here it is 
-  // .find(filter ? { category: filter } : {})
-
-    // sending seperate data
+    // sending separate data
     app.get("/allJobs", async (req, res) => {
       const page = parseInt(req?.query?.page) - 1;
       const size = parseInt(req?.query?.size);
       const filter = req?.query?.filter;
       const sort = req?.query?.sort;
-      console.log(page, size, filter,sort);
-      let query = {};
-      if (filter) query = { category: filter };
+      const search = req?.query?.search;
+      console.log(page, size, filter, sort, search);
+      let query = {
+        job_title: { $regex: search, $options: "i" },
+      };
+      if (filter) query.category = filter;
       let options = {};
-      if(sort) options = {sort:{deadline: sort === 'asc' ? 1 : -1}}
+      if (sort) options = { sort: { deadline: sort === "asc" ? 1 : -1 } };
       const result = await jobsCollection
-        .find(query,options)
+        .find(query, options)
         .skip(page * size)
         .limit(size)
         .toArray();
