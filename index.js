@@ -182,24 +182,35 @@ async function run() {
       res.send(result);
     });
 
+    // pagination
+    // all jobs count
+    app.get("/allJobsCount", async (req, res) => {
+      const filter = req?.query?.filter;
+      // let query = {};
+      // if(filter) query = {category: filter}
+      const count = await jobsCollection.countDocuments(filter ? {category: filter} : {});
+      res.send({ count });
+    });
 
-    // pagination 
-    // all jobs count 
-    app.get("/allJobsCount", async(req,res) => {
-      const count = await jobsCollection.countDocuments();
-      res.send({count});
-    })
 
-    // sending seperate data 
+  // there is another way to filter here it is 
+  // .find(filter ? { category: filter } : {})
+
+    // sending seperate data
     app.get("/allJobs", async (req, res) => {
       const page = parseInt(req?.query?.page) - 1;
       const size = parseInt(req?.query?.size);
       const filter = req?.query?.filter;
-      console.log(page, size , filter);
-      const result = await jobsCollection.find().skip(page * size).limit(size).toArray();
+      console.log(page, size, filter);
+      let query = {};
+      if (filter) query = { category: filter };
+      const result = await jobsCollection
+        .find(query)
+        .skip(page * size)
+        .limit(size)
+        .toArray();
       res.send(result);
     });
-
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
