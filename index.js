@@ -8,7 +8,11 @@ require("dotenv").config();
 const port = process.env.PORT || 5000;
 
 const corsOptions = {
-  origin: ["http://localhost:5174", "http://localhost:5173" , "https://solosphere-eee5c.web.app"],
+  origin: [
+    "http://localhost:5174",
+    "http://localhost:5173",
+    "https://solosphere-eee5c.web.app",
+  ],
   credentials: true,
   optionSuccessStatus: 200,
 };
@@ -150,6 +154,14 @@ async function run() {
           .send("you have already placed a bid on this job");
       } else {
         const result = await bidsCollection.insertOne(bid);
+        const updateDoc = {
+          $inc: { bid_count: 1 }
+        };
+        const queryForBidCount = { _id: new ObjectId(bid.jobId) };
+        const updateBidCount = await jobsCollection.updateOne(
+          queryForBidCount,
+          updateDoc
+        );
         res.send(result);
       }
     });
@@ -190,7 +202,7 @@ async function run() {
       let query = {
         job_title: { $regex: search, $options: "i" },
       };
-      if(filter) query.category = filter;
+      if (filter) query.category = filter;
       const count = await jobsCollection.countDocuments(
         query
         // filter ? { category: filter } : {}
