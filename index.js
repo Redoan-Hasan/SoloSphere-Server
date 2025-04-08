@@ -186,10 +186,14 @@ async function run() {
     // all jobs count
     app.get("/allJobsCount", async (req, res) => {
       const filter = req?.query?.filter;
-      // let query = {};
-      // if(filter) query = {category: filter}
+      const search = req?.query?.search;
+      let query = {
+        job_title: { $regex: search, $options: "i" },
+      };
+      if(filter) query.category = filter;
       const count = await jobsCollection.countDocuments(
-        filter ? { category: filter } : {}
+        query
+        // filter ? { category: filter } : {}
       );
       res.send({ count });
     });
